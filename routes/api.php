@@ -9,6 +9,6 @@ Route::middleware('auth.token')->group(function () {
     // Kursy walut
     Route::post('/currency-rates', [CurrencyRateController::class, 'getRates']);
     Route::post('/currency-rates/daily-update', [DailyCurrencyRateController::class, 'updateTodayRates']);
-    Route::middleware('auth.token')->post('/installments/calculate', [InstallmentController::class, 'index']);
+    Route::post('/installments/calculate', [InstallmentController::class, 'index']);
 
 });
