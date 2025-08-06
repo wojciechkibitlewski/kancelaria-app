@@ -1,0 +1,15 @@
+{
+    "name": "Laravel Dev Container",
+    "dockerFile": "Dockerfile",
+    "forwardPorts": [8000],
+    "postCreateCommand": "composer install && php artisan key:generate",
+    "customizations": {
+      "vscode": {
+        "extensions": [
+          "xdebug.php-debug",
+          "bmewburn.vscode-intelephense-client",
+          "esbenp.prettier-vscode"
+        ]
+      }
+    }
+  }
