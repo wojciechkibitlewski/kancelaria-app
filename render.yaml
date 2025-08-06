@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: kancelaria-backend
+    env: docker
+    plan: free
+    autoDeploy: true
