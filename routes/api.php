@@ -12,3 +12,9 @@ Route::middleware('auth.token')->group(function () {
     Route::post('/installments/calculate', [InstallmentController::class, 'index']);
 
 });
+
+Route::post('/hello', function () {
+    return response()->json([
+        'komunikat' => 'dzień dobry'
+    ]);
+});
