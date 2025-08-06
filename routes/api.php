@@ -18,3 +18,9 @@ Route::post('/hello', function () {
         'komunikat' => 'dzień dobry'
     ]);
 });
+
+Route::get('/hello', function () {
+    return response()->json([
+        'komunikat' => 'dzień dobry (GET)'
+    ]);
+});
