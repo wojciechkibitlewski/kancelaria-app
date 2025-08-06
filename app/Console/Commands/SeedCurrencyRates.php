@@ -6,40 +6,37 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
-use App\Models\Currency;
 use App\Models\CurrencyRate;
 use Carbon\Carbon;
 
 class SeedCurrencyRates extends Command
 {
     protected $signature = 'currency:seed';
-    protected $description = 'Pobiera archiwalne kursy walut z NBP i zapisuje do bazy';
+    protected $description = 'Pobiera archiwalne kursy jednej waluty z NBP i zapisuje do bazy';
 
     public function handle()
-{
-    $this->info('Pobieranie archiwalnych danych z NBP...');
+    {
+        $this->info('Pobieranie archiwalnych danych z NBP...');
 
-    $table = 'A';
-    $startDate = Carbon::create('2002-01-02');
-    $endDate = Carbon::now();
-    $currencies = Currency::pluck('currency')->toArray();
+        $table = 'A';
+        $currency = 'CHF'; // 👈 Wpisz ręcznie walutę tutaj
+        $startDate = Carbon::create('2002-01-02');
+        $endDate = Carbon::now();
 
-    foreach ($currencies as $code) {
-        $this->line("Pobieranie: $code");
+        $this->line("Pobieranie waluty: $currency");
 
         $current = $startDate->copy();
         while ($current->lessThanOrEqualTo($endDate)) {
             $chunkStart = $current->toDateString();
             $chunkEnd = $current->copy()->addDays(92)->min($endDate)->toDateString();
 
-            $url = "https://api.nbp.pl/api/exchangerates/rates/{$table}/{$code}/{$chunkStart}/{$chunkEnd}/?format=json";
+            $url = "https://api.nbp.pl/api/exchangerates/rates/{$table}/{$currency}/{$chunkStart}/{$chunkEnd}/";
 
             try {
-                //$response = Http::get($url);
                 $response = Http::timeout(10)->get($url);
 
                 if ($response->failed()) {
-                    $this->warn("Błąd pobierania danych dla: $code od $chunkStart do $chunkEnd");
+                    $this->warn("Błąd pobierania danych dla: $currency od $chunkStart do $chunkEnd");
                     $current->addDays(93);
                     continue;
                 }
@@ -51,23 +48,26 @@ class SeedCurrencyRates extends Command
                     CurrencyRate::updateOrCreate(
                         [
                             'effective_date' => $rate['effectiveDate'],
-                            'currency' => $code,
+                            'currency' => $currency,
                         ],
                         [
                             'value' => $rate['mid'],
                         ]
                     );
+                    sleep(5);
                     $counter++;
                 }
 
+                $this->line("✔️  $currency: $counter rekordów dodanych ($chunkStart → $chunkEnd)");
+
             } catch (\Throwable $e) {
-                $this->error("Wyjątek dla $code od $chunkStart do $chunkEnd: " . $e->getMessage());
+                $this->error("❌ Wyjątek dla $currency od $chunkStart do $chunkEnd: " . $e->getMessage());
             }
 
             $current->addDays(93);
+            sleep(1); // ⏳ oddech dla NBP
         }
-    }
 
-    $this->line("Dodano $counter rekordów dla $code ($chunkStart → $chunkEnd)");
-}
+        $this->info('✅ Zakończono pobieranie danych.');
+    }
 }
