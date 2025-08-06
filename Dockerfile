@@ -1,18 +1,21 @@
 FROM php:8.2-fpm
 
-# Instalacja zależności (tak jak masz teraz)
+# Instalacja zależności PHP
 RUN apt-get update && apt-get install -y \
     zip unzip curl git libpq-dev libzip-dev \
     && docker-php-ext-install pdo pdo_pgsql zip
 
-# Ustaw katalog roboczy
+# Ustawienie katalogu roboczego
 WORKDIR /var/www
 
-# Skopiuj projekt
-COPY . /var/www
+# Skopiowanie kodu aplikacji do kontenera
+COPY . .
 
-# Skopiuj composer z oficjalnego obrazu
+# Skopiowanie Composera
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Uruchom Laravel
+# Instalacja zależności Laravelowych
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# Start aplikacji Laravel
 CMD php artisan serve --host=0.0.0.0 --port=8080
