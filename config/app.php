@@ -123,4 +123,9 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    // 'providers' => [
+    //     // Inne providery
+    //     App\Providers\RouteServiceProvider::class,
+    // ],
+
 ];
