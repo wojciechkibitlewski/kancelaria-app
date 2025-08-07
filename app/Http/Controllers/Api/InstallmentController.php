@@ -13,25 +13,28 @@ class InstallmentController extends Controller
     public function index(Request $request)
     {
         try {
+            
             // 1. Przyjmij i zapisz dane
-            $lead = $this->acceptData($request);
+            $leadData = $this->acceptData($request);
 
+            
             // 2. Sprawdź typ sprawy i uruchom odpowiedni kalkulator
-            $caseType = $lead->case_type_code;
+            $caseType = $leadData->case_type_code;
 
             $result = match ($caseType) {
-                'GET'   => \App\Services\LoanCalculators::calculatorGet($lead),
-                //'WAL'   => \App\Services\LoanCalculators::calculatorWal($lead),
-                //'KZO'   => \App\Services\LoanCalculators::calculatorKzo($lead),
-               // 'SKD'   => \App\Services\LoanCalculators::calculatorSkd($lead),
-                //'WIBOR' => \App\Services\LoanCalculators::calculatorWibor($lead),
+                'GET'   => \App\Services\LoanCalculators::calculatorGet($leadData),
+                // 'WAL'   => \App\Services\LoanCalculators::calculatorWal($leadData),
+                // 'KZO'   => \App\Services\LoanCalculators::calculatorKzo($leadData),
+                // 'SKD'   => \App\Services\LoanCalculators::calculatorSkd($leadData),
+                // 'WIBOR' => \App\Services\LoanCalculators::calculatorWibor($leadData),
                 default => ['error' => 'Nieobsługiwany Case Type Code']
             };
-
+            
             return response()->json([
-                'lead_id' => $lead->lead_id,
+                'lead_id' => $leadData->lead_id,
                 'calculation' => $result,
             ]);
+
 
         } catch (\Throwable $e) {
             Log::error('InstallmentController@index error: ' . $e->getMessage());
@@ -40,59 +43,121 @@ class InstallmentController extends Controller
                 'details' => $e->getMessage()
             ], 500);
         }
+        
+
+        
+        
+        // try {
+        //     // 1. Przyjmij i zapisz dane
+        //     $lead = $this->acceptData($request);
+
+        //     // 2. Sprawdź typ sprawy i uruchom odpowiedni kalkulator
+        //     $caseType = $lead->case_type_code;
+
+        //     $result = match ($caseType) {
+        //         'GET'   => \App\Services\LoanCalculators::calculatorGet($lead),
+        //         //'WAL'   => \App\Services\LoanCalculators::calculatorWal($lead),
+        //         //'KZO'   => \App\Services\LoanCalculators::calculatorKzo($lead),
+        //        // 'SKD'   => \App\Services\LoanCalculators::calculatorSkd($lead),
+        //         //'WIBOR' => \App\Services\LoanCalculators::calculatorWibor($lead),
+        //         default => ['error' => 'Nieobsługiwany Case Type Code']
+        //     };
+
+        //     return response()->json([
+        //         'lead_id' => $lead->lead_id,
+        //         'calculation' => $result,
+        //     ]);
+
+        // } catch (\Throwable $e) {
+        //     Log::error('InstallmentController@index error: ' . $e->getMessage());
+        //     return response()->json([
+        //         'error' => 'Wystąpił błąd przy przetwarzaniu danych.',
+        //         'details' => $e->getMessage()
+        //     ], 500);
+        // }
     }
 
-    private function acceptData(Request $request): Lead
+    private function acceptData(Request $request)
     {
-        $data = $request->json()->all();
+        try {
+            $leadData = $request->input('data');
 
-        // Walidacja minimalna
-        $validator = Validator::make($data[0], [
-            'Lead ID' => 'required|string',
-            'LoanDate' => 'required|date',
-            'LoanAmount' => 'required|numeric',
-            'LoanCurrency' => 'required|string',
-            'LoanTermMonth' => 'required|integer',
-            'BankMargin' => 'required|numeric',
-            'LoanIndexes' => 'required|string',
-            'LoanInstallments' => 'required|string',
-            'Case Type Code' => 'required|string',
-        ]);
+            // Na tym etapie data powinno być tablicą
+            if (!is_array($leadData) || empty($leadData)) {
+                throw new \Exception('Brak danych w polu "data".');
+            }
 
-        if ($validator->fails()) {
-            throw new \Exception('Błąd walidacji danych: ' . $validator->errors()->first());
+            
+            // $lead = $data[0];
+
+            // Walidacja minimalna
+            $validator = Validator::make($leadData[0], [
+                'lead_id' => 'required|string',
+                'contract_id' => 'string|nullable',
+                'case_type_code' => 'required|string',
+                'loan_date' => 'required|date',
+                'loan_currency' => 'required|string',
+                'loan_amount' => 'required|numeric',
+                'loan_amount_currency' => 'required|numeric',
+                'paid_in_currency' => 'required|string',
+                'loan_currency_change_date' => 'date|nullable',
+                'loan_term_month' => 'required|numeric',
+                'grace_period' => 'numeric',
+                'bank_margin' => 'required|numeric',
+                'spreed' => 'numeric|nullable',
+                'loan_indexes' => 'required|string',
+                'loan_installments' => 'required|string',
+                'loan_paid_option' => 'string|nullable',
+                'loan_paid' => 'string|nullable',
+                'loan_overpayment_option' => 'string|nullable',
+                'loan_overpayment_result' => 'string|nullable',
+                'loan_overpayment_amount' => 'numeric|nullable',
+                'loan_overpayment_currency' => 'string|nullable',
+                'loan_repayment_option' => 'string|nullable',
+                'loan_repayment_date' => 'date|nullable',                
+            ]);
+
+            if ($validator->fails()) {
+                throw new \Exception('Błąd walidacji danych: ' . $validator->errors()->first());
+            }
+
+            $savedLead = Lead::updateOrCreate(
+                ['lead_id' => $leadData[0]['lead_id']], // warunki wyszukiwania
+                [
+                    'contract_id' => $leadData[0]['contract_id'] ?? null,
+                    'case_type_code' => $leadData[0]['case_type_code'],
+                    'loan_date' => $leadData[0]['loan_date'],
+                    'loan_currency' => $leadData[0]['loan_currency'],
+                    'loan_amount' => $leadData[0]['loan_amount'],
+                    'loan_amount_currency' => $leadData[0]['loan_amount_currency'],
+                    'paid_in_currency' => $leadData[0]['paid_in_currency'],
+                    'loan_currency_change_date' => $leadData[0]['loan_currency_change_date'] ?? null,
+                    'loan_term_month' => $leadData[0]['loan_term_month'],
+                    'grace_period' => $leadData[0]['grace_period'] ?? null,
+                    'bank_margin' => $leadData[0]['bank_margin'],
+                    'spreed' => $leadData[0]['spreed'] ?? null,
+                    'loan_indexes' => $leadData[0]['loan_indexes'],
+                    'loan_installments' => $leadData[0]['loan_installments'],
+                    'loan_paid_option' => $leadData[0]['loan_paid_option'] ?? null,
+                    'loan_paid' => $leadData[0]['loan_paid'] ?? null,
+                    'loan_overpayment_option' => $leadData[0]['loan_overpayment_option'] ?? null,
+                    'loan_overpayment_result' => $leadData[0]['loan_overpayment_result'] ?? null,
+                    'loan_overpayment_amount' => $leadData[0]['loan_overpayment_amount'] ?? null,
+                    'loan_overpayment_currency' => $leadData[0]['loan_overpayment_currency'] ?? null,
+                    'loan_repayment_option' => $leadData[0]['loan_repayment_option'] ?? null,
+                    'loan_repayment_date' => $leadData[0]['loan_repayment_date'] ?? null,
+                    'payload' => $leadData[0], // opcjonalnie – cały rekord oryginalny
+                ]
+            );
+
+            // Zwracamy do testu
+            return $savedLead;
+
+        } catch (\Throwable $e) {
+            Log::error('acceptData error: ' . $e->getMessage());
+            throw $e; // przekazujemy do index()
         }
-
-        $leadData = $data[0];
-
-        // Mapowanie danych z n8n do modelu Lead
-        return Lead::updateOrCreate(
-            ['lead_id' => $leadData['Lead ID']],
-            [
-                'contract_id' => $leadData['Contract ID'] ?? null,
-                'case_type_code' => $leadData['Case Type Code'][0] ?? null,
-                'loan_date' => $leadData['LoanDate'],
-                'loan_currency' => $leadData['LoanCurrency'],
-                'loan_amount' => $leadData['LoanAmount'],
-                'loan_amount_currency' => $leadData['LoanAmountInCurrency'] ?? null,
-                'paid_in_currency' => $leadData['PaidInCurrency'] ?? null,
-                'loan_currency_change_date' => $leadData['LoanCurrencyChangeDate'] ?? null,
-                'loan_term_month' => $leadData['LoanTermMonth'],
-                'grace_period' => $leadData['GracePeriod'] ?? null,
-                'bank_margin' => $leadData['BankMargin'],
-                'spreed' => $leadData['Spreed'] ?? null,
-                'loan_indexes' => $leadData['LoanIndexes'],
-                'loan_installments' => $leadData['LoanInstallments'],
-                'loan_paid_option' => $leadData['LoanPaidOption'] ?? null,
-                'loan_paid' => $leadData['LoanPaid'] ?? null,
-                'loan_overpayment_option' => $leadData['LoanOverpaymentOption'] ?? null,
-                'loan_overpayment_result' => $leadData['LoanOverpaymentResult'] ?? null,
-                'loan_overpayment_amount' => $leadData['LoanOverpaymentAmount'] ?? null,
-                'loan_overpayment_currency' => $leadData['LoanOverpaymentCurrency'] ?? null,
-                'loan_repayment_option' => $leadData['LoanRepaymentOption'] ?? null,
-                'loan_repayment_date' => $leadData['LoanRepaymentDate'] ?? null,
-                'payload' => $leadData,
-            ]
-        );
+        
     }
+
 }

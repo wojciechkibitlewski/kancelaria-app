@@ -8,7 +8,7 @@ return new class extends Migration {
     {
         Schema::create('leads', function (Blueprint $table) {
             $table->id(); // lokalne ID
-            $table->uuid('lead_id')->unique(); // np. "recxVyBlB1V6T1LXP" z n8n
+            $table->string('lead_id')->unique(); // np. "recxVyBlB1V6T1LXP" z n8n
             $table->string('contract_id')->nullable(); // np. GET/2025/01/sder23
             $table->string('case_type_code')->nullable(); // np. GET, WAL, KZO
 
