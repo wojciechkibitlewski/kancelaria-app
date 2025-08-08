@@ -13,32 +13,33 @@ class LoanCalculators
     // Kalkulator GET
     //
     ///////////////////
-    public static function calculatorGet(Lead $lead): array
-    {
-        return match ($lead->loan_installments) {
-            'stale' => self::calculateFixedInstallments($lead),
-            // 'malejace' => self::calculateDecreasingInstallments($lead),
-            default => ['error' => 'Nieobsługiwany typ rat: ' . $lead->loan_installments],
-        };
-    }
     // public static function calculatorGet(Lead $lead): array
     // {
     //     return match ($lead->loan_installments) {
-    //         'stale' => self::summarizeInstallments(
-    //             self::calculateFixedInstallments($lead),
-    //             $lead
-    //         ),
-            
-    //         // 'malejace' => self::summarizeInstallments(
-    //         //     self::calculateDecreasingInstallments($lead),
-    //         //     $lead
-    //         // ),
-            
-    //         default => [
-    //             'error' => 'Nieobsługiwany typ rat: ' . $lead->loan_installments
-    //         ],
+    //         'stale' => self::calculateFixedInstallments($lead),
+    //         // 'malejace' => self::calculateDecreasingInstallments($lead),
+    //         default => ['error' => 'Nieobsługiwany typ rat: ' . $lead->loan_installments],
     //     };
     // }
+    
+    
+    public static function calculatorGet(Lead $lead): array
+    {
+        $result = self::calculateFixedInstallments($lead);
+
+        return match ($lead->loan_installments) {
+            'stale' => self::summarizeInstallments($result['schedule'], $lead),
+            
+            // 'malejace' => self::summarizeInstallments(
+            //     self::calculateDecreasingInstallments($lead),
+            //     $lead
+            // ),
+            
+            default => [
+                'error' => 'Nieobsługiwany typ rat: ' . $lead->loan_installments
+            ],
+        };
+    }
 
     //podsumowanie kredytu GET
     private static function summarizeInstallments(array $installments, Lead $lead): array
@@ -155,6 +156,7 @@ class LoanCalculators
 
                 'saldoCHF' => round($saldoCHF, 2),
                 'saldoPLN' => round($saldoPLN, 2),
+                'saldoNaleznePLN' => round($saldoNaleznePLN, 2),
 
                 'rataCHF' => round($rataCHF, 2),
                 'rataPLN' => round($rataPLN, 2),

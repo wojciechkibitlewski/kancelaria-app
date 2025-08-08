@@ -43,38 +43,7 @@ class InstallmentController extends Controller
                 'details' => $e->getMessage()
             ], 500);
         }
-        
 
-        
-        
-        // try {
-        //     // 1. Przyjmij i zapisz dane
-        //     $lead = $this->acceptData($request);
-
-        //     // 2. Sprawdź typ sprawy i uruchom odpowiedni kalkulator
-        //     $caseType = $lead->case_type_code;
-
-        //     $result = match ($caseType) {
-        //         'GET'   => \App\Services\LoanCalculators::calculatorGet($lead),
-        //         //'WAL'   => \App\Services\LoanCalculators::calculatorWal($lead),
-        //         //'KZO'   => \App\Services\LoanCalculators::calculatorKzo($lead),
-        //        // 'SKD'   => \App\Services\LoanCalculators::calculatorSkd($lead),
-        //         //'WIBOR' => \App\Services\LoanCalculators::calculatorWibor($lead),
-        //         default => ['error' => 'Nieobsługiwany Case Type Code']
-        //     };
-
-        //     return response()->json([
-        //         'lead_id' => $lead->lead_id,
-        //         'calculation' => $result,
-        //     ]);
-
-        // } catch (\Throwable $e) {
-        //     Log::error('InstallmentController@index error: ' . $e->getMessage());
-        //     return response()->json([
-        //         'error' => 'Wystąpił błąd przy przetwarzaniu danych.',
-        //         'details' => $e->getMessage()
-        //     ], 500);
-        // }
     }
 
     private function acceptData(Request $request)
