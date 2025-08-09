@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/password/create-link', [PasswordController::class, 'createLink']);
 
     // lista / podgląd
+
     Route::get('/users',            [UserController::class, 'index']);
     Route::get('/users/{user}',     [UserController::class, 'show']);
 
@@ -27,7 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // edycja siebie
     Route::put('/users/me',         [UserController::class, 'updateSelf']);
-
+    Route::get('/auth/me', [LoginController::class, 'me']);
+    
     // edycja przez kierownika/zarząd
     Route::put('/users/{user}',     [UserController::class, 'update']);
 

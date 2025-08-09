@@ -47,4 +47,9 @@ class LoginController extends Controller
             'message' => 'Wylogowano ze wszystkich urządzeń.'
         ]);
     }
+
+    public function me(Request $request)
+    {
+        return $request->user()->load('roles:id,name','manager:id,name');
+    }
 }
