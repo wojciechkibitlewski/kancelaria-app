@@ -34,5 +34,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'n8n' => [
+        'reset_webhook' => env('N8N_RESET_WEBHOOK'),
+        'secret' => env('N8N_WEBHOOK_SECRET'), // opcjonalnie
+    ],
+    'frontend_url' => env('FRONTEND_URL'),
 
 ];
