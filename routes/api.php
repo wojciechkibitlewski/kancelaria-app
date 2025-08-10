@@ -14,7 +14,7 @@ use App\Http\Controllers\Api\UserController;
 Route::post('/auth/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/auth/password/reset',       [PasswordController::class, 'reset']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth')->group(function () {
     Route::post('/auth/logout', [LoginController::class, 'logout']);
     Route::post('/auth/password/create-link', [PasswordController::class, 'createLink']);
 
